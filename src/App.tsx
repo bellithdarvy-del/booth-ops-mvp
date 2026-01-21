@@ -14,6 +14,7 @@ import RiwayatBooth from "./pages/owner/RiwayatBooth";
 import Transaksi from "./pages/owner/Transaksi";
 import InputBelanja from "./pages/owner/InputBelanja";
 import Items from "./pages/owner/Items";
+import Laporan from "./pages/owner/Laporan";
 import KaryawanHome from "./pages/karyawan/Home";
 import KaryawanClosing from "./pages/karyawan/Closing";
 import NotFound from "./pages/NotFound";
@@ -53,7 +54,7 @@ function AppRoutes() {
       <Route path="/owner/booth/buka" element={<ProtectedRoute allowedRoles={['owner']}><BukaBooth /></ProtectedRoute>} />
       <Route path="/owner/transaksi" element={<ProtectedRoute allowedRoles={['owner']}><Transaksi /></ProtectedRoute>} />
       <Route path="/owner/transaksi/input" element={<ProtectedRoute allowedRoles={['owner']}><InputBelanja /></ProtectedRoute>} />
-      <Route path="/owner/laporan" element={<ProtectedRoute allowedRoles={['owner']}><OwnerDashboard /></ProtectedRoute>} />
+      <Route path="/owner/laporan" element={<ProtectedRoute allowedRoles={['owner']}><Laporan /></ProtectedRoute>} />
       <Route path="/owner/items" element={<ProtectedRoute allowedRoles={['owner']}><Items /></ProtectedRoute>} />
       
       {/* Karyawan Routes */}
