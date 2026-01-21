@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -31,7 +32,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { formatRupiah, formatDate } from '@/lib/format';
-import { CalendarIcon, Lock, TrendingUp, TrendingDown, Wallet, PiggyBank, History } from 'lucide-react';
+import { CalendarIcon, Lock, TrendingUp, TrendingDown, Wallet, PiggyBank, History, Users, User } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -53,6 +54,10 @@ interface PeriodClosing {
   total_hpp: number;
   total_opex: number;
   net_profit: number;
+  owner_share_percent: number;
+  karyawan_share_percent: number;
+  owner_share_amount: number;
+  karyawan_share_amount: number;
   created_at: string;
   creator?: { name: string };
 }
@@ -66,6 +71,8 @@ export default function ClosingPeriode() {
   const [endDate, setEndDate] = useState<Date>(endOfMonth(subMonths(new Date(), 1)));
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedClosing, setSelectedClosing] = useState<PeriodClosing | null>(null);
+  const [ownerPercent, setOwnerPercent] = useState(70);
+  const [karyawanPercent, setKaryawanPercent] = useState(30);
 
   // Get existing period closings
   const { data: closings = [], isLoading: loadingClosings } = useQuery({
@@ -116,6 +123,25 @@ export default function ClosingPeriode() {
     return { revenue, hpp, opex, netProfit };
   }, [cashbook]);
 
+  // Calculate profit sharing
+  const profitSharing = useMemo(() => {
+    const profit = Math.max(0, totals.netProfit); // Only share positive profit
+    const ownerAmount = Math.round(profit * ownerPercent / 100);
+    const karyawanAmount = Math.round(profit * karyawanPercent / 100);
+    return { ownerAmount, karyawanAmount };
+  }, [totals.netProfit, ownerPercent, karyawanPercent]);
+
+  const handlePercentChange = (type: 'owner' | 'karyawan', value: number) => {
+    const clampedValue = Math.max(0, Math.min(100, value));
+    if (type === 'owner') {
+      setOwnerPercent(clampedValue);
+      setKaryawanPercent(100 - clampedValue);
+    } else {
+      setKaryawanPercent(clampedValue);
+      setOwnerPercent(100 - clampedValue);
+    }
+  };
+
   // Check if period overlaps with existing closings
   const hasOverlap = useMemo(() => {
     const start = format(startDate, 'yyyy-MM-dd');
@@ -138,6 +164,10 @@ export default function ClosingPeriode() {
           total_hpp: totals.hpp,
           total_opex: totals.opex,
           net_profit: totals.netProfit,
+          owner_share_percent: ownerPercent,
+          karyawan_share_percent: karyawanPercent,
+          owner_share_amount: profitSharing.ownerAmount,
+          karyawan_share_amount: profitSharing.karyawanAmount,
           created_by: user?.id,
         });
       if (error) throw error;
@@ -264,6 +294,65 @@ export default function ClosingPeriode() {
               </CardContent>
             </Card>
 
+            {/* Profit Sharing */}
+            {totals.netProfit > 0 && (
+              <Card className="border-primary/50 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Bagi Hasil
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">Owner</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={ownerPercent}
+                          onChange={(e) => handlePercentChange('owner', parseInt(e.target.value) || 0)}
+                          className="w-20 text-center"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                      <p className="text-lg font-bold text-primary">
+                        {formatRupiah(profitSharing.ownerAmount)}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-success" />
+                        <span className="text-sm font-medium">Karyawan</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={karyawanPercent}
+                          onChange={(e) => handlePercentChange('karyawan', parseInt(e.target.value) || 0)}
+                          className="w-20 text-center"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                      <p className="text-lg font-bold text-success">
+                        {formatRupiah(profitSharing.karyawanAmount)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Total: {ownerPercent + karyawanPercent}% dari Net Profit {formatRupiah(totals.netProfit)}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <Button 
               size="lg" 
               className="w-full"
@@ -339,6 +428,10 @@ export default function ClosingPeriode() {
               • OPEX: {formatRupiah(totals.opex)}<br />
               • <strong>Net Profit: {formatRupiah(totals.netProfit)}</strong>
               <br /><br />
+              <strong>Bagi Hasil:</strong><br />
+              • Owner ({ownerPercent}%): {formatRupiah(profitSharing.ownerAmount)}<br />
+              • Karyawan ({karyawanPercent}%): {formatRupiah(profitSharing.karyawanAmount)}
+              <br /><br />
               Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -400,6 +493,41 @@ export default function ClosingPeriode() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Profit Sharing Section */}
+              {selectedClosing.net_profit > 0 && (
+                <Card className="bg-primary/5 border-primary/30">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Bagi Hasil
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <User className="h-3 w-3" />
+                          Owner ({selectedClosing.owner_share_percent}%)
+                        </div>
+                        <p className="text-lg font-bold text-primary">
+                          {formatRupiah(selectedClosing.owner_share_amount)}
+                        </p>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Users className="h-3 w-3" />
+                          Karyawan ({selectedClosing.karyawan_share_percent}%)
+                        </div>
+                        <p className="text-lg font-bold text-success">
+                          {formatRupiah(selectedClosing.karyawan_share_amount)}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="text-sm text-muted-foreground">
                 <p>Dikunci oleh: {selectedClosing.creator?.name}</p>
                 <p>Pada: {formatDate(new Date(selectedClosing.created_at))}</p>
