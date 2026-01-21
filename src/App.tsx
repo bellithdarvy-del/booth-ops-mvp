@@ -10,6 +10,7 @@ import { LoadingScreen } from "@/components/ui/spinner";
 import Login from "./pages/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
 import BukaBooth from "./pages/owner/BukaBooth";
+import RiwayatBooth from "./pages/owner/RiwayatBooth";
 import Transaksi from "./pages/owner/Transaksi";
 import InputBelanja from "./pages/owner/InputBelanja";
 import Items from "./pages/owner/Items";
@@ -48,7 +49,7 @@ function AppRoutes() {
       
       {/* Owner Routes */}
       <Route path="/owner" element={<ProtectedRoute allowedRoles={['owner']}><OwnerDashboard /></ProtectedRoute>} />
-      <Route path="/owner/booth" element={<ProtectedRoute allowedRoles={['owner']}><OwnerDashboard /></ProtectedRoute>} />
+      <Route path="/owner/booth" element={<ProtectedRoute allowedRoles={['owner']}><RiwayatBooth /></ProtectedRoute>} />
       <Route path="/owner/booth/buka" element={<ProtectedRoute allowedRoles={['owner']}><BukaBooth /></ProtectedRoute>} />
       <Route path="/owner/transaksi" element={<ProtectedRoute allowedRoles={['owner']}><Transaksi /></ProtectedRoute>} />
       <Route path="/owner/transaksi/input" element={<ProtectedRoute allowedRoles={['owner']}><InputBelanja /></ProtectedRoute>} />
