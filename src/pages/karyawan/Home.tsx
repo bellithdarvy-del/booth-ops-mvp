@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { formatRupiah, formatDate, getTodayISO } from '@/lib/format';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardCheck, Package, AlertCircle } from 'lucide-react';
+import { ClipboardCheck, Package, AlertCircle, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TodaySession {
@@ -77,10 +77,20 @@ export default function KaryawanHome() {
   return (
     <KaryawanLayout title="Home">
       <div className="space-y-6 animate-fade-in">
-        {/* Today's Date */}
-        <div className="text-center">
-          <p className="text-muted-foreground text-sm">Hari Ini</p>
-          <p className="text-2xl font-bold">{formatDate(new Date())}</p>
+        {/* Today's Date & Quick Action */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-muted-foreground text-sm">Hari Ini</p>
+            <p className="text-2xl font-bold">{formatDate(new Date())}</p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/karyawan/riwayat')}
+          >
+            <History className="mr-2 h-4 w-4" />
+            Riwayat
+          </Button>
         </div>
 
         {/* Session Status Card */}

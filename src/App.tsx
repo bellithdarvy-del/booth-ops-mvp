@@ -18,6 +18,7 @@ import Laporan from "./pages/owner/Laporan";
 import ClosingPeriode from "./pages/owner/ClosingPeriode";
 import KaryawanHome from "./pages/karyawan/Home";
 import KaryawanClosing from "./pages/karyawan/Closing";
+import KaryawanRiwayatClosing from "./pages/karyawan/RiwayatClosing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,7 +63,7 @@ function AppRoutes() {
       {/* Karyawan Routes */}
       <Route path="/karyawan" element={<ProtectedRoute allowedRoles={['karyawan']}><KaryawanHome /></ProtectedRoute>} />
       <Route path="/karyawan/closing" element={<ProtectedRoute allowedRoles={['karyawan']}><KaryawanClosing /></ProtectedRoute>} />
-      <Route path="/karyawan/riwayat" element={<ProtectedRoute allowedRoles={['karyawan']}><KaryawanHome /></ProtectedRoute>} />
+      <Route path="/karyawan/riwayat" element={<ProtectedRoute allowedRoles={['karyawan']}><KaryawanRiwayatClosing /></ProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
