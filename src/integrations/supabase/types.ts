@@ -194,7 +194,11 @@ export type Database = {
           created_by: string
           end_date: string
           id: string
+          karyawan_share_amount: number
+          karyawan_share_percent: number
           net_profit: number
+          owner_share_amount: number
+          owner_share_percent: number
           start_date: string
           total_hpp: number
           total_opex: number
@@ -205,7 +209,11 @@ export type Database = {
           created_by: string
           end_date: string
           id?: string
+          karyawan_share_amount?: number
+          karyawan_share_percent?: number
           net_profit?: number
+          owner_share_amount?: number
+          owner_share_percent?: number
           start_date: string
           total_hpp?: number
           total_opex?: number
@@ -216,7 +224,11 @@ export type Database = {
           created_by?: string
           end_date?: string
           id?: string
+          karyawan_share_amount?: number
+          karyawan_share_percent?: number
           net_profit?: number
+          owner_share_amount?: number
+          owner_share_percent?: number
           start_date?: string
           total_hpp?: number
           total_opex?: number
