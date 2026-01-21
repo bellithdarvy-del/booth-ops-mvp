@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { getTodayISO, formatDate, formatRupiah, parseRupiahInput } from '@/lib/format';
 import { toast } from 'sonner';
-import { ClipboardCheck, Package, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { ClipboardCheck, Package, AlertCircle, CheckCircle2, ArrowLeft, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SessionItem {
@@ -151,6 +151,20 @@ export default function KaryawanClosing() {
     }));
   };
 
+  // Calculate estimated revenue based on items sold
+  const estimatedRevenue = useMemo(() => {
+    if (!todaySession) return 0;
+    return todaySession.items.reduce((total, item) => {
+      const qtyClose = stockInputs[item.id] ?? 0;
+      const sold = Math.max(0, item.qty_open - qtyClose);
+      return total + (sold * item.items.price);
+    }, 0);
+  }, [todaySession, stockInputs]);
+
+  const handleUseEstimate = () => {
+    setTotalSales(estimatedRevenue.toString());
+  };
+
   const handleSubmit = () => {
     closeSession.mutate();
   };
@@ -217,6 +231,34 @@ export default function KaryawanClosing() {
           </div>
         </div>
 
+        {/* Estimated Revenue */}
+        <Card className="bg-accent/50 border-accent">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Calculator className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Estimasi Omzet</span>
+                </div>
+                <p className="text-xl font-bold text-primary">
+                  {formatRupiah(estimatedRevenue)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Berdasarkan item terjual × harga
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleUseEstimate}
+                disabled={estimatedRevenue === 0}
+              >
+                Gunakan
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Total Sales Input */}
         <Card className="border-2 border-primary">
           <CardContent className="p-4">
@@ -257,25 +299,39 @@ export default function KaryawanClosing() {
             </div>
             
             <div className="space-y-4">
-              {todaySession.items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.items.name}</p>
-                    <p className="text-xs text-primary">{formatRupiah(item.items.price)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Stok buka: {item.qty_open}
-                    </p>
+              {todaySession.items.map((item) => {
+                const qtyClose = stockInputs[item.id] ?? 0;
+                const sold = Math.max(0, item.qty_open - qtyClose);
+                const itemRevenue = sold * item.items.price;
+                
+                return (
+                  <div key={item.id} className="space-y-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{item.items.name}</p>
+                        <p className="text-xs text-primary">{formatRupiah(item.items.price)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Stok buka: {item.qty_open}
+                        </p>
+                      </div>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={item.qty_open}
+                        value={stockInputs[item.id] ?? 0}
+                        onChange={(e) => handleStockChange(item.id, e.target.value)}
+                        className="w-24 text-center font-semibold"
+                      />
+                    </div>
+                    {sold > 0 && (
+                      <div className="flex justify-between text-xs bg-success/10 rounded px-2 py-1">
+                        <span className="text-success">Terjual: {sold} pcs</span>
+                        <span className="text-success font-medium">{formatRupiah(itemRevenue)}</span>
+                      </div>
+                    )}
                   </div>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={item.qty_open}
-                    value={stockInputs[item.id] ?? 0}
-                    onChange={(e) => handleStockChange(item.id, e.target.value)}
-                    className="w-24 text-center font-semibold"
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
