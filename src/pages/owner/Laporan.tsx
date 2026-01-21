@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import OwnerLayout from '@/components/layout/OwnerLayout';
@@ -11,7 +12,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { formatRupiah, formatDate } from '@/lib/format';
-import { CalendarIcon, TrendingUp, TrendingDown, Wallet, ShoppingCart, Receipt, PiggyBank } from 'lucide-react';
+import { CalendarIcon, TrendingUp, TrendingDown, Wallet, ShoppingCart, Receipt, PiggyBank, Lock } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
@@ -37,6 +38,7 @@ interface CashbookEntry {
 }
 
 export default function Laporan() {
+  const navigate = useNavigate();
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
 
@@ -126,6 +128,16 @@ export default function Laporan() {
   return (
     <OwnerLayout title="Laporan Periode">
       <div className="space-y-4">
+        {/* Closing Periode Button */}
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => navigate('/owner/laporan/closing')}
+        >
+          <Lock className="mr-2 h-4 w-4" />
+          Closing Periode
+        </Button>
+
         {/* Date Range Picker */}
         <Card>
           <CardContent className="flex flex-wrap gap-3 py-3">
