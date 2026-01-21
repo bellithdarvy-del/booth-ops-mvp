@@ -16,6 +16,7 @@ import InputBelanja from "./pages/owner/InputBelanja";
 import Items from "./pages/owner/Items";
 import Laporan from "./pages/owner/Laporan";
 import ClosingPeriode from "./pages/owner/ClosingPeriode";
+import FeePenjualan from "./pages/owner/FeePenjualan";
 import KaryawanHome from "./pages/karyawan/Home";
 import KaryawanClosing from "./pages/karyawan/Closing";
 import KaryawanRiwayatClosing from "./pages/karyawan/RiwayatClosing";
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/owner/transaksi/input" element={<ProtectedRoute allowedRoles={['owner']}><InputBelanja /></ProtectedRoute>} />
       <Route path="/owner/laporan" element={<ProtectedRoute allowedRoles={['owner']}><Laporan /></ProtectedRoute>} />
       <Route path="/owner/laporan/closing" element={<ProtectedRoute allowedRoles={['owner']}><ClosingPeriode /></ProtectedRoute>} />
+      <Route path="/owner/fee" element={<ProtectedRoute allowedRoles={['owner']}><FeePenjualan /></ProtectedRoute>} />
       <Route path="/owner/items" element={<ProtectedRoute allowedRoles={['owner']}><Items /></ProtectedRoute>} />
       
       {/* Karyawan Routes */}

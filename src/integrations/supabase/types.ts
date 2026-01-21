@@ -64,10 +64,14 @@ export type Database = {
           closed_by: string | null
           created_at: string
           date: string
+          fee_paid: boolean
+          fee_paid_at: string | null
+          fee_paid_by: string | null
           id: string
           notes: string | null
           opened_by: string
           status: Database["public"]["Enums"]["session_status"]
+          total_fee: number
           total_sales_input: number | null
           updated_at: string
         }
@@ -75,10 +79,14 @@ export type Database = {
           closed_by?: string | null
           created_at?: string
           date: string
+          fee_paid?: boolean
+          fee_paid_at?: string | null
+          fee_paid_by?: string | null
           id?: string
           notes?: string | null
           opened_by: string
           status?: Database["public"]["Enums"]["session_status"]
+          total_fee?: number
           total_sales_input?: number | null
           updated_at?: string
         }
@@ -86,10 +94,14 @@ export type Database = {
           closed_by?: string | null
           created_at?: string
           date?: string
+          fee_paid?: boolean
+          fee_paid_at?: string | null
+          fee_paid_by?: string | null
           id?: string
           notes?: string | null
           opened_by?: string
           status?: Database["public"]["Enums"]["session_status"]
+          total_fee?: number
           total_sales_input?: number | null
           updated_at?: string
         }
@@ -97,6 +109,13 @@ export type Database = {
           {
             foreignKeyName: "booth_sessions_closed_by_fkey"
             columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "booth_sessions_fee_paid_by_fkey"
+            columns: ["fee_paid_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
@@ -168,6 +187,7 @@ export type Database = {
           is_active: boolean
           name: string
           price: number
+          sales_fee: number
           updated_at: string
         }
         Insert: {
@@ -176,6 +196,7 @@ export type Database = {
           is_active?: boolean
           name: string
           price?: number
+          sales_fee?: number
           updated_at?: string
         }
         Update: {
@@ -184,6 +205,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           price?: number
+          sales_fee?: number
           updated_at?: string
         }
         Relationships: []

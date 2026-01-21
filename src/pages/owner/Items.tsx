@@ -23,6 +23,7 @@ interface Item {
   id: string;
   name: string;
   price: number;
+  sales_fee: number;
   is_active: boolean;
   created_at: string;
 }
@@ -33,8 +34,10 @@ export default function Items() {
   const [editItem, setEditItem] = useState<Item | null>(null);
   const [newItemName, setNewItemName] = useState('');
   const [newItemPrice, setNewItemPrice] = useState('');
+  const [newItemFee, setNewItemFee] = useState('');
   const [editItemName, setEditItemName] = useState('');
   const [editItemPrice, setEditItemPrice] = useState('');
+  const [editItemFee, setEditItemFee] = useState('');
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['items'],
@@ -49,8 +52,8 @@ export default function Items() {
   });
 
   const addMutation = useMutation({
-    mutationFn: async ({ name, price }: { name: string; price: number }) => {
-      const { error } = await supabase.from('items').insert({ name: name.trim(), price });
+    mutationFn: async ({ name, price, sales_fee }: { name: string; price: number; sales_fee: number }) => {
+      const { error } = await supabase.from('items').insert({ name: name.trim(), price, sales_fee });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -58,6 +61,7 @@ export default function Items() {
       setIsAddOpen(false);
       setNewItemName('');
       setNewItemPrice('');
+      setNewItemFee('');
       toast.success('Item berhasil ditambahkan');
     },
     onError: () => {
@@ -66,10 +70,10 @@ export default function Items() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, name, price }: { id: string; name: string; price: number }) => {
+    mutationFn: async ({ id, name, price, sales_fee }: { id: string; name: string; price: number; sales_fee: number }) => {
       const { error } = await supabase
         .from('items')
-        .update({ name: name.trim(), price })
+        .update({ name: name.trim(), price, sales_fee })
         .eq('id', id);
       if (error) throw error;
     },
@@ -78,6 +82,7 @@ export default function Items() {
       setEditItem(null);
       setEditItemName('');
       setEditItemPrice('');
+      setEditItemFee('');
       toast.success('Item berhasil diperbarui');
     },
     onError: () => {
@@ -108,7 +113,8 @@ export default function Items() {
       return;
     }
     const price = parseRupiahInput(newItemPrice);
-    addMutation.mutate({ name: newItemName, price });
+    const sales_fee = parseRupiahInput(newItemFee);
+    addMutation.mutate({ name: newItemName, price, sales_fee });
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -118,13 +124,15 @@ export default function Items() {
       return;
     }
     const price = parseRupiahInput(editItemPrice);
-    updateMutation.mutate({ id: editItem.id, name: editItemName, price });
+    const sales_fee = parseRupiahInput(editItemFee);
+    updateMutation.mutate({ id: editItem.id, name: editItemName, price, sales_fee });
   };
 
   const openEditDialog = (item: Item) => {
     setEditItem(item);
     setEditItemName(item.name);
     setEditItemPrice(item.price.toString());
+    setEditItemFee(item.sales_fee.toString());
   };
 
   const activeItems = items.filter((i) => i.is_active);
@@ -177,9 +185,16 @@ export default function Items() {
                       <span className={cn('block truncate', !item.is_active && 'line-through')}>
                         {item.name}
                       </span>
-                      <span className="text-sm text-primary font-medium">
-                        {formatRupiah(item.price)}
-                      </span>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-primary font-medium">
+                          {formatRupiah(item.price)}
+                        </span>
+                        {item.sales_fee > 0 && (
+                          <span className="text-success text-xs">
+                            Fee: {formatRupiah(item.sales_fee)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -237,6 +252,22 @@ export default function Items() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="fee">Fee Penjualan (per item)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">Rp</span>
+                  <Input
+                    id="fee"
+                    type="text"
+                    inputMode="numeric"
+                    value={newItemFee}
+                    onChange={(e) => setNewItemFee(e.target.value.replace(/\D/g, ''))}
+                    placeholder="0"
+                    className="pl-10"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Nominal yang diterima karyawan per item terjual</p>
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -285,6 +316,22 @@ export default function Items() {
                     className="pl-10"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-fee">Fee Penjualan (per item)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">Rp</span>
+                  <Input
+                    id="edit-fee"
+                    type="text"
+                    inputMode="numeric"
+                    value={editItemFee}
+                    onChange={(e) => setEditItemFee(e.target.value.replace(/\D/g, ''))}
+                    placeholder="0"
+                    className="pl-10"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Nominal yang diterima karyawan per item terjual</p>
               </div>
             </div>
             <DialogFooter>

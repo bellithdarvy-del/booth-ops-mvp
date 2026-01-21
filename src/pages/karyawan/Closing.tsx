@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { getTodayISO, formatDate, formatRupiah, parseRupiahInput } from '@/lib/format';
 import { toast } from 'sonner';
-import { ClipboardCheck, Package, AlertCircle, CheckCircle2, ArrowLeft, Calculator } from 'lucide-react';
+import { ClipboardCheck, Package, AlertCircle, CheckCircle2, ArrowLeft, Calculator, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SessionItem {
@@ -23,6 +23,7 @@ interface SessionItem {
   items: {
     name: string;
     price: number;
+    sales_fee: number;
   };
 }
 
@@ -66,7 +67,8 @@ export default function KaryawanClosing() {
           qty_close,
           items (
             name,
-            price
+            price,
+            sales_fee
           )
         `)
         .eq('session_id', session.id);
@@ -93,12 +95,21 @@ export default function KaryawanClosing() {
       const salesAmount = parseRupiahInput(totalSales);
       if (salesAmount <= 0) throw new Error('Total penjualan harus lebih dari 0');
 
-      // Update booth session
+      // Calculate total fee
+      let calculatedTotalFee = 0;
+      for (const item of todaySession.items) {
+        const qtyClose = stockInputs[item.id] ?? 0;
+        const sold = Math.max(0, item.qty_open - qtyClose);
+        calculatedTotalFee += sold * item.items.sales_fee;
+      }
+
+      // Update booth session with total_fee
       const { error: sessionError } = await supabase
         .from('booth_sessions')
         .update({
           status: 'CLOSED',
           total_sales_input: salesAmount,
+          total_fee: calculatedTotalFee,
           closed_by: user?.id,
           notes: notes || null,
         })
@@ -131,6 +142,23 @@ export default function KaryawanClosing() {
         });
 
       if (cashbookError) throw cashbookError;
+
+      // Create cashbook entry for fee as OPEX (if any fee)
+      if (calculatedTotalFee > 0) {
+        const { error: feeError } = await supabase
+          .from('cashbook')
+          .insert({
+            date: today,
+            type: 'OUT',
+            category: 'OPEX',
+            amount: calculatedTotalFee,
+            description: `Fee Penjualan Karyawan ${formatDate(new Date())}`,
+            user_id: user?.id,
+            session_id: todaySession.id,
+          });
+
+        if (feeError) throw feeError;
+      }
     },
     onSuccess: () => {
       toast.success('Closing berhasil!');
@@ -158,6 +186,16 @@ export default function KaryawanClosing() {
       const qtyClose = stockInputs[item.id] ?? 0;
       const sold = Math.max(0, item.qty_open - qtyClose);
       return total + (sold * item.items.price);
+    }, 0);
+  }, [todaySession, stockInputs]);
+
+  // Calculate total fee for karyawan
+  const totalFee = useMemo(() => {
+    if (!todaySession) return 0;
+    return todaySession.items.reduce((total, item) => {
+      const qtyClose = stockInputs[item.id] ?? 0;
+      const sold = Math.max(0, item.qty_open - qtyClose);
+      return total + (sold * item.items.sales_fee);
     }, 0);
   }, [todaySession, stockInputs]);
 
@@ -231,33 +269,54 @@ export default function KaryawanClosing() {
           </div>
         </div>
 
-        {/* Estimated Revenue */}
-        <Card className="bg-accent/50 border-accent">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Calculator className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Estimasi Omzet</span>
+        {/* Estimated Revenue & Fee */}
+        <div className="grid grid-cols-1 gap-3">
+          <Card className="bg-accent/50 border-accent">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calculator className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">Estimasi Omzet</span>
+                  </div>
+                  <p className="text-xl font-bold text-primary">
+                    {formatRupiah(estimatedRevenue)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Berdasarkan item terjual × harga
+                  </p>
                 </div>
-                <p className="text-xl font-bold text-primary">
-                  {formatRupiah(estimatedRevenue)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Berdasarkan item terjual × harga
-                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleUseEstimate}
+                  disabled={estimatedRevenue === 0}
+                >
+                  Gunakan
+                </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleUseEstimate}
-                disabled={estimatedRevenue === 0}
-              >
-                Gunakan
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Fee Card */}
+          {totalFee > 0 && (
+            <Card className="bg-success/10 border-success/30">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-success/20 rounded-full">
+                    <Wallet className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Fee Penjualan Anda</p>
+                    <p className="text-xl font-bold text-success">
+                      {formatRupiah(totalFee)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         {/* Total Sales Input */}
         <Card className="border-2 border-primary">
@@ -309,7 +368,12 @@ export default function KaryawanClosing() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{item.items.name}</p>
-                        <p className="text-xs text-primary">{formatRupiah(item.items.price)}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-primary">{formatRupiah(item.items.price)}</p>
+                          {item.items.sales_fee > 0 && (
+                            <p className="text-xs text-success">Fee: {formatRupiah(item.items.sales_fee)}</p>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           Stok buka: {item.qty_open}
                         </p>

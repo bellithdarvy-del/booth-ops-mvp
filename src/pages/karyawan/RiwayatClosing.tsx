@@ -6,11 +6,14 @@ import { Spinner } from '@/components/ui/spinner';
 import { formatRupiah, formatDate } from '@/lib/format';
 import { History, Calendar, TrendingUp, Users, Wallet } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 interface ClosedSession {
   id: string;
   date: string;
   total_sales_input: number;
+  total_fee: number;
+  fee_paid: boolean;
   notes: string | null;
 }
 
@@ -35,7 +38,7 @@ export default function RiwayatClosing() {
       
       const { data, error } = await supabase
         .from('booth_sessions')
-        .select('id, date, total_sales_input, notes')
+        .select('id, date, total_sales_input, total_fee, fee_paid, notes')
         .eq('status', 'CLOSED')
         .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
         .order('date', { ascending: false });
@@ -61,6 +64,8 @@ export default function RiwayatClosing() {
   });
 
   const totalProfitShare = periodClosings?.reduce((sum, p) => sum + p.karyawan_share_amount, 0) || 0;
+  const totalFeeEarned = closedSessions?.reduce((sum, s) => sum + s.total_fee, 0) || 0;
+  const pendingFee = closedSessions?.filter(s => !s.fee_paid).reduce((sum, s) => sum + s.total_fee, 0) || 0;
 
   return (
     <KaryawanLayout title="Riwayat Closing">
@@ -76,22 +81,36 @@ export default function RiwayatClosing() {
           </div>
         </div>
 
-        {/* Summary Card */}
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/20 rounded-full">
-                <Wallet className="h-6 w-6 text-primary" />
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Wallet className="h-4 w-4 text-success" />
+                <p className="text-xs text-muted-foreground">Fee Penjualan</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Bagi Hasil Diterima</p>
-                <p className="text-2xl font-bold text-primary">
-                  {formatRupiah(totalProfitShare)}
+              <p className="text-lg font-bold text-success">
+                {formatRupiah(totalFeeEarned)}
+              </p>
+              {pendingFee > 0 && (
+                <p className="text-xs text-warning mt-1">
+                  Belum dibayar: {formatRupiah(pendingFee)}
                 </p>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="h-4 w-4 text-primary" />
+                <p className="text-xs text-muted-foreground">Bagi Hasil</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="text-lg font-bold text-primary">
+                {formatRupiah(totalProfitShare)}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Tabs */}
         <Tabs defaultValue="daily" className="w-full">
@@ -123,11 +142,23 @@ export default function RiwayatClosing() {
               closedSessions?.map((session) => (
                 <Card key={session.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-semibold">
-                          {formatDate(new Date(session.date))}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">
+                            {formatDate(new Date(session.date))}
+                          </p>
+                          {session.total_fee > 0 && (
+                            <span className={cn(
+                              "text-xs px-2 py-0.5 rounded-full",
+                              session.fee_paid 
+                                ? "bg-success/20 text-success" 
+                                : "bg-warning/20 text-warning"
+                            )}>
+                              {session.fee_paid ? 'Dibayar' : 'Pending'}
+                            </span>
+                          )}
+                        </div>
                         {session.notes && (
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                             {session.notes}
@@ -135,10 +166,14 @@ export default function RiwayatClosing() {
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-success">
-                          {formatRupiah(session.total_sales_input)}
+                        <p className="text-sm text-muted-foreground">
+                          Omzet: {formatRupiah(session.total_sales_input)}
                         </p>
-                        <p className="text-xs text-muted-foreground">Omzet</p>
+                        {session.total_fee > 0 && (
+                          <p className="text-lg font-bold text-success">
+                            +{formatRupiah(session.total_fee)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </CardContent>
