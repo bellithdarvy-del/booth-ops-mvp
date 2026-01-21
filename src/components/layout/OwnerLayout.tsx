@@ -7,7 +7,8 @@ import {
   Wallet, 
   FileText, 
   LogOut,
-  Package
+  Package,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/owner', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/owner/booth', icon: Store, label: 'Booth' },
   { to: '/owner/transaksi', icon: Wallet, label: 'Transaksi' },
+  { to: '/owner/fee', icon: Users, label: 'Fee' },
   { to: '/owner/laporan', icon: FileText, label: 'Laporan' },
   { to: '/owner/items', icon: Package, label: 'Item' },
 ];
