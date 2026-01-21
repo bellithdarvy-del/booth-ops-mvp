@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import KaryawanLayout from '@/components/layout/KaryawanLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { formatRupiah, formatDate } from '@/lib/format';
-import { History, Calendar, Wallet } from 'lucide-react';
+import { History, Calendar as CalendarIcon, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format, subDays } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 interface ClosedSession {
   id: string;
@@ -17,18 +23,19 @@ interface ClosedSession {
 }
 
 export default function RiwayatClosing() {
-  // Fetch closed sessions (last 30 days)
+  const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30));
+  const [endDate, setEndDate] = useState<Date>(new Date());
+
+  // Fetch closed sessions based on date range
   const { data: closedSessions, isLoading: loadingSessions } = useQuery({
-    queryKey: ['karyawan-closed-sessions'],
+    queryKey: ['karyawan-closed-sessions', startDate.toISOString(), endDate.toISOString()],
     queryFn: async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
       const { data, error } = await supabase
         .from('booth_sessions')
         .select('id, date, total_sales_input, total_fee, fee_paid, notes')
         .eq('status', 'CLOSED')
-        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+        .gte('date', format(startDate, 'yyyy-MM-dd'))
+        .lte('date', format(endDate, 'yyyy-MM-dd'))
         .order('date', { ascending: false });
 
       if (error) throw error;
@@ -53,6 +60,62 @@ export default function RiwayatClosing() {
           </div>
         </div>
 
+        {/* Date Range Filter */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <label className="text-xs text-muted-foreground mb-1 block">Dari Tanggal</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(startDate, 'd MMM yyyy', { locale: id })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => date && setStartDate(date)}
+                      disabled={(date) => date > endDate || date > new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex-1">
+                <label className="text-xs text-muted-foreground mb-1 block">Sampai Tanggal</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(endDate, 'd MMM yyyy', { locale: id })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => date && setEndDate(date)}
+                      disabled={(date) => date < startDate || date > new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Fee Summary Card */}
         <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
           <CardContent className="p-4">
@@ -74,8 +137,8 @@ export default function RiwayatClosing() {
         {/* Daily Closings List */}
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Closing Harian (30 hari terakhir)
+            <CalendarIcon className="h-4 w-4" />
+            Closing Harian ({closedSessions?.length || 0} sesi)
           </h2>
           
           {loadingSessions ? (
@@ -85,8 +148,8 @@ export default function RiwayatClosing() {
           ) : closedSessions?.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="p-6 text-center text-muted-foreground">
-                <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p>Belum ada riwayat closing</p>
+                <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p>Tidak ada riwayat closing di periode ini</p>
               </CardContent>
             </Card>
           ) : (
