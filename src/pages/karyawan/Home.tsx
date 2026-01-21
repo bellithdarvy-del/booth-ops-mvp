@@ -24,6 +24,7 @@ interface SessionItem {
   qty_close: number | null;
   items: {
     name: string;
+    price: number;
   };
 }
 
@@ -50,7 +51,8 @@ export default function KaryawanHome() {
           qty_open,
           qty_close,
           items (
-            name
+            name,
+            price
           )
         `)
         .eq('session_id', session.id);
@@ -151,8 +153,11 @@ export default function KaryawanHome() {
                         key={item.id} 
                         className="flex items-center justify-between py-2 border-b last:border-0"
                       >
-                        <span className="text-sm">{item.items.name}</span>
-                        <div className="flex items-center gap-4 text-sm">
+                        <div className="min-w-0">
+                          <span className="text-sm block">{item.items.name}</span>
+                          <span className="text-xs text-primary">{formatRupiah(item.items.price)}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm shrink-0">
                           <span className="text-muted-foreground">
                             Buka: <span className="font-medium text-foreground">{item.qty_open}</span>
                           </span>

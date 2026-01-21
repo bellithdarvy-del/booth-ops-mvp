@@ -12,10 +12,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { getTodayISO, formatDate } from '@/lib/format';
 import { toast } from 'sonner';
 import { Store, Package, Minus, Plus, ArrowLeft } from 'lucide-react';
+import { formatRupiah } from '@/lib/format';
 
 interface Item {
   id: string;
   name: string;
+  price: number;
   is_active: boolean;
 }
 
@@ -186,9 +188,12 @@ export default function BukaBooth() {
             <Card key={item.id}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Package className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">{item.name}</span>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Package className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <span className="font-medium block truncate">{item.name}</span>
+                      <span className="text-sm text-primary">{formatRupiah(item.price)}</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button

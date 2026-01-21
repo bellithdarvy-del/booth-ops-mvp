@@ -32,7 +32,7 @@ interface SessionItem {
   id: string;
   qty_open: number;
   qty_close: number | null;
-  item: { name: string };
+  item: { name: string; price: number };
 }
 
 export default function RiwayatBooth() {
@@ -63,7 +63,7 @@ export default function RiwayatBooth() {
         .from('booth_session_items')
         .select(`
           *,
-          item:items(name)
+          item:items(name, price)
         `)
         .eq('session_id', selectedSession.id);
       if (error) throw error;
@@ -244,8 +244,11 @@ export default function RiwayatBooth() {
                             key={si.id}
                             className="flex items-center justify-between py-2 border-b last:border-0"
                           >
-                            <span className="font-medium">{si.item.name}</span>
-                            <div className="text-sm text-right">
+                            <div className="min-w-0">
+                              <span className="font-medium block">{si.item.name}</span>
+                              <span className="text-sm text-primary">{formatRupiah(si.item.price)}</span>
+                            </div>
+                            <div className="text-sm text-right shrink-0">
                               <div className="flex gap-3">
                                 <span className="text-muted-foreground">
                                   Buka: {si.qty_open}

@@ -16,10 +16,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Plus, Pencil, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatRupiah, parseRupiahInput } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 interface Item {
   id: string;
   name: string;
+  price: number;
   is_active: boolean;
   created_at: string;
 }
@@ -29,7 +32,9 @@ export default function Items() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editItem, setEditItem] = useState<Item | null>(null);
   const [newItemName, setNewItemName] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState('');
   const [editItemName, setEditItemName] = useState('');
+  const [editItemPrice, setEditItemPrice] = useState('');
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['items'],
@@ -44,14 +49,15 @@ export default function Items() {
   });
 
   const addMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const { error } = await supabase.from('items').insert({ name: name.trim() });
+    mutationFn: async ({ name, price }: { name: string; price: number }) => {
+      const { error } = await supabase.from('items').insert({ name: name.trim(), price });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       setIsAddOpen(false);
       setNewItemName('');
+      setNewItemPrice('');
       toast.success('Item berhasil ditambahkan');
     },
     onError: () => {
@@ -60,10 +66,10 @@ export default function Items() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+    mutationFn: async ({ id, name, price }: { id: string; name: string; price: number }) => {
       const { error } = await supabase
         .from('items')
-        .update({ name: name.trim() })
+        .update({ name: name.trim(), price })
         .eq('id', id);
       if (error) throw error;
     },
@@ -71,6 +77,7 @@ export default function Items() {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       setEditItem(null);
       setEditItemName('');
+      setEditItemPrice('');
       toast.success('Item berhasil diperbarui');
     },
     onError: () => {
@@ -100,7 +107,8 @@ export default function Items() {
       toast.error('Nama item tidak boleh kosong');
       return;
     }
-    addMutation.mutate(newItemName);
+    const price = parseRupiahInput(newItemPrice);
+    addMutation.mutate({ name: newItemName, price });
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -109,12 +117,14 @@ export default function Items() {
       toast.error('Nama item tidak boleh kosong');
       return;
     }
-    updateMutation.mutate({ id: editItem.id, name: editItemName });
+    const price = parseRupiahInput(editItemPrice);
+    updateMutation.mutate({ id: editItem.id, name: editItemName, price });
   };
 
   const openEditDialog = (item: Item) => {
     setEditItem(item);
     setEditItemName(item.name);
+    setEditItemPrice(item.price.toString());
   };
 
   const activeItems = items.filter((i) => i.is_active);
@@ -161,11 +171,16 @@ export default function Items() {
                 className={!item.is_active ? 'opacity-60' : ''}
               >
                 <CardContent className="flex items-center justify-between py-3 px-4">
-                  <div className="flex items-center gap-3">
-                    <Package className="h-5 w-5 text-muted-foreground" />
-                    <span className={!item.is_active ? 'line-through' : ''}>
-                      {item.name}
-                    </span>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Package className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <span className={cn('block truncate', !item.is_active && 'line-through')}>
+                        {item.name}
+                      </span>
+                      <span className="text-sm text-primary font-medium">
+                        {formatRupiah(item.price)}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Switch
@@ -207,6 +222,21 @@ export default function Items() {
                   autoFocus
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Harga Jual</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">Rp</span>
+                  <Input
+                    id="price"
+                    type="text"
+                    inputMode="numeric"
+                    value={newItemPrice}
+                    onChange={(e) => setNewItemPrice(e.target.value.replace(/\D/g, ''))}
+                    placeholder="0"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -240,6 +270,21 @@ export default function Items() {
                   onChange={(e) => setEditItemName(e.target.value)}
                   autoFocus
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-price">Harga Jual</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">Rp</span>
+                  <Input
+                    id="edit-price"
+                    type="text"
+                    inputMode="numeric"
+                    value={editItemPrice}
+                    onChange={(e) => setEditItemPrice(e.target.value.replace(/\D/g, ''))}
+                    placeholder="0"
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>

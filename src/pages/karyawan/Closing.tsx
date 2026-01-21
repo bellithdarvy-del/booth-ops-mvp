@@ -22,6 +22,7 @@ interface SessionItem {
   qty_close: number | null;
   items: {
     name: string;
+    price: number;
   };
 }
 
@@ -64,7 +65,8 @@ export default function KaryawanClosing() {
           qty_open,
           qty_close,
           items (
-            name
+            name,
+            price
           )
         `)
         .eq('session_id', session.id);
@@ -257,8 +259,9 @@ export default function KaryawanClosing() {
             <div className="space-y-4">
               {todaySession.items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="font-medium">{item.items.name}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{item.items.name}</p>
+                    <p className="text-xs text-primary">{formatRupiah(item.items.price)}</p>
                     <p className="text-xs text-muted-foreground">
                       Stok buka: {item.qty_open}
                     </p>
