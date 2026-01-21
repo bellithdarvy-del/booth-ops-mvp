@@ -25,7 +25,6 @@ const navItems = [
   { to: '/owner/booth', icon: Store, label: 'Booth', badge: null },
   { to: '/owner/transaksi', icon: Wallet, label: 'Transaksi', badge: null },
   { to: '/owner/fee', icon: Users, label: 'Fee', badge: 'pendingFee' },
-  { to: '/owner/laporan', icon: FileText, label: 'Laporan', badge: null },
   { to: '/owner/items', icon: Package, label: 'Item', badge: null },
 ];
 
