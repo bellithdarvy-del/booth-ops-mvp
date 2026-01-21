@@ -2,71 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* 
+  HPP Global Booth Finance App - Design System
+  Mobile-first fintech app for booth operations
+  
+  Color palette:
+  - Primary: Warm orange (#F97316) - represents food/warmth/energy
+  - Success/Profit: Green (#22C55E) - money in
+  - Danger/Expense: Red (#EF4444) - money out
+  - Neutral: Slate grays for text and borders
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Core backgrounds */
+    --background: 30 20% 98%;
     --foreground: 222.2 84% 4.9%;
 
+    /* Cards and surfaces */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Warm Orange (booth/food) */
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 0 0% 100%;
 
+    /* Secondary - Cool slate */
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
+    /* Muted - Soft grays */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Light orange tint */
+    --accent: 30 90% 95%;
+    --accent-foreground: 24.6 95% 40%;
+
+    /* Status colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 0%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
+    /* Borders and inputs */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 24.6 95% 53.1%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-
+    /* Sidebar */
+    --sidebar-background: 30 15% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
+    --sidebar-primary: 24.6 95% 53.1%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 30 50% 95%;
+    --sidebar-accent-foreground: 24.6 95% 40%;
     --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 24.6 95% 53.1%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Custom utility colors */
+    --profit: 142 76% 36%;
+    --expense: 0 84% 60%;
+    --hpp: 280 60% 55%;
+    --opex: 200 80% 50%;
+    --modal: 45 93% 47%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 84% 7%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 84% 7%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -74,23 +98,36 @@ All colors MUST be HSL.
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 24.6 50% 15%;
+    --accent-foreground: 24.6 95% 70%;
 
-    --destructive: 0 62.8% 30.6%;
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 0%;
+
+    --destructive: 0 62.8% 40%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 24.6 95% 53.1%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 24.6 95% 53.1%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent: 24.6 30% 15%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 24.6 95% 53.1%;
+
+    --profit: 142 76% 55%;
+    --expense: 0 84% 65%;
+    --hpp: 280 60% 65%;
+    --opex: 200 80% 60%;
+    --modal: 45 93% 55%;
   }
 }
 
@@ -100,6 +137,92 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components {
+  /* KPI Card styles */
+  .kpi-card {
+    @apply rounded-xl border bg-card p-4 shadow-sm transition-all duration-200;
+  }
+  
+  .kpi-card-profit {
+    @apply border-l-4 border-l-success;
+  }
+  
+  .kpi-card-expense {
+    @apply border-l-4 border-l-destructive;
+  }
+  
+  .kpi-card-neutral {
+    @apply border-l-4 border-l-primary;
+  }
+
+  /* Form field styles for mobile */
+  .field-mobile {
+    @apply rounded-lg border-2 border-input bg-background px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none;
+  }
+
+  /* Status badges */
+  .status-open {
+    @apply inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success;
+  }
+  
+  .status-closed {
+    @apply inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground;
+  }
+
+  /* Money display */
+  .money-positive {
+    @apply text-success font-semibold;
+  }
+  
+  .money-negative {
+    @apply text-destructive font-semibold;
+  }
+
+  /* Bottom navigation for mobile */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80;
+  }
+  
+  .bottom-nav-item {
+    @apply flex flex-1 flex-col items-center gap-1 py-2 text-muted-foreground transition-colors;
+  }
+  
+  .bottom-nav-item-active {
+    @apply text-primary;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
