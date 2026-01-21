@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import OwnerLayout from '@/components/layout/OwnerLayout';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { formatRupiah, formatDate } from '@/lib/format';
-import { Calendar, Package, TrendingUp, User, ClipboardList } from 'lucide-react';
+import { Calendar, Package, TrendingUp, User, ClipboardList, Plus } from 'lucide-react';
 
 interface BoothSession {
   id: string;
@@ -34,6 +36,7 @@ interface SessionItem {
 }
 
 export default function RiwayatBooth() {
+  const navigate = useNavigate();
   const [selectedSession, setSelectedSession] = useState<BoothSession | null>(null);
 
   const { data: sessions = [], isLoading } = useQuery({
@@ -95,8 +98,8 @@ export default function RiwayatBooth() {
           </Card>
         </div>
 
-        {/* Open Session Banner */}
-        {openSession && (
+        {/* Open Session Banner or Buka Booth Button */}
+        {openSession ? (
           <Card className="border-warning bg-warning/10">
             <CardContent className="flex items-center gap-3 py-3">
               <div className="h-3 w-3 rounded-full bg-warning animate-pulse" />
@@ -108,6 +111,15 @@ export default function RiwayatBooth() {
               </div>
             </CardContent>
           </Card>
+        ) : (
+          <Button 
+            className="w-full" 
+            size="lg"
+            onClick={() => navigate('/owner/booth/buka')}
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Buka Booth Hari Ini
+          </Button>
         )}
 
         {/* Sessions List */}
