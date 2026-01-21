@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   LayoutDashboard, 
   Store, 
@@ -19,21 +21,43 @@ interface OwnerLayoutProps {
 }
 
 const navItems = [
-  { to: '/owner', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/owner/booth', icon: Store, label: 'Booth' },
-  { to: '/owner/transaksi', icon: Wallet, label: 'Transaksi' },
-  { to: '/owner/fee', icon: Users, label: 'Fee' },
-  { to: '/owner/laporan', icon: FileText, label: 'Laporan' },
-  { to: '/owner/items', icon: Package, label: 'Item' },
+  { to: '/owner', icon: LayoutDashboard, label: 'Dashboard', badge: null },
+  { to: '/owner/booth', icon: Store, label: 'Booth', badge: null },
+  { to: '/owner/transaksi', icon: Wallet, label: 'Transaksi', badge: null },
+  { to: '/owner/fee', icon: Users, label: 'Fee', badge: 'pendingFee' },
+  { to: '/owner/laporan', icon: FileText, label: 'Laporan', badge: null },
+  { to: '/owner/items', icon: Package, label: 'Item', badge: null },
 ];
 
 export default function OwnerLayout({ children, title }: OwnerLayoutProps) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Fetch pending fee count
+  const { data: pendingFeeCount = 0 } = useQuery({
+    queryKey: ['pending-fee-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('booth_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'CLOSED')
+        .eq('fee_paid', false)
+        .gt('total_fee', 0);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    staleTime: 30000, // Cache for 30 seconds
+  });
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const getBadgeValue = (badgeKey: string | null) => {
+    if (badgeKey === 'pendingFee') return pendingFeeCount;
+    return 0;
   };
 
   return (
@@ -64,19 +88,29 @@ export default function OwnerLayout({ children, title }: OwnerLayoutProps) {
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
         <div className="container flex">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/owner'}
-              className={({ isActive }) =>
-                cn('bottom-nav-item', isActive && 'bottom-nav-item-active')
-              }
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const badgeValue = getBadgeValue(item.badge);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/owner'}
+                className={({ isActive }) =>
+                  cn('bottom-nav-item relative', isActive && 'bottom-nav-item-active')
+                }
+              >
+                <div className="relative">
+                  <item.icon className="h-5 w-5" />
+                  {badgeValue > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                      {badgeValue > 99 ? '99+' : badgeValue}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </NavLink>
+            );
+          })}
         </div>
       </nav>
     </div>
